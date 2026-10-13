@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        .node circle { fill: #fff; stroke: steelblue; stroke-width: 3px; }
+        .node text { font: 12px sans-serif; }
+        .link { fill: none; stroke: #ccc; stroke-width: 2px; }
+    </style>
+</head>
+<body>
+    <div id="tree-container"></div>
+
+            <script>
+
+        class EMLNode {
+            constructor(value = "EML", left = null, right = null) {
+                this.value = value;
+                this.left = left;
+                this.right = right;
+            }
+        }
+
+        function makeEMLTree(expression) {
+            const firstBracket = expression.indexOf("[");
+
+            // Base case: no brackets found, return a leaf node
+            if (firstBracket === -1) {
+                return new EMLNode(expression);
+            }
+
+            const rootValue = expression.substring(0, firstBracket);
+            const root = new EMLNode(rootValue);
+
+            let stack = [];
+            // We start looking inside the brackets of the current level
+            for (let i = 0; i < expression.length; i++) {
+                const char = expression[i];
+
+                if (char === "[") {
+                    stack.push("[");
+                } else if (char === "]") {
+                    stack.pop();
+                } 
+                // Logic: if we find a comma and the stack only has the outer-most 
+                // bracket pair open, this comma separates the left and right children.
+                else if (char === "," && stack.length === 1) {
+                    const leftPart = expression.substring(firstBracket + 1, i);
+                    const rightPart = expression.substring(i + 1, expression.length - 1);
+
+                    root.left = makeEMLTree(leftPart);
+                    root.right = makeEMLTree(rightPart);
+                    
+                    // Once we've found the middle comma, we can stop the loop for this level
+                    break;
+                }
+            }
+
+            return root;
+        }
+
+        // Example usage:
+        // const tree = makeEMLTree("A[B[D,E],C]");
+
+        function renderTree(emlString){
+            const data = makeEMLTree(emlString);
+
+            
+        }
+
+        async function loadData() {
+
+            const params = new URLSearchParams({count:4});
+
+            try {
+                const response = await fetch(`http://127.0.0.1:8000/expressions?${params.toString()}`, {
+                    method:'GET',
+                    headers:{'Content-Type':'application/json'}
+                });
+
+                if (response.ok) {
+                    const optionsMap = await response.json();
+
+                    const keys = Object.keys(optionsMap);
+                    const targetKey = keys[Math.floor(Math.random()*keys.length)];
+
+                    const targetDiv = document.createElement('div');
+
+                    targetDiv.textContent = `Which one of the following is ${targetKey}?`;
+                    targetDiv.style.gap = '10px';
+                    targetDiv.style.padding = '10px';
+                    targetDiv.style.width = '50%';
+                    targetDiv.style.margin = '0 auto';
+                    targetDiv.style.textAlign = 'center';
+
+                    const btnContainer = document.createElement('div');
+                    btnContainer.style.display = 'grid';
+                    btnContainer.style.gridTemplateColumns = 'repeat(2, 1fr)'; // Two equal columns
+                    btnContainer.style.gap = '10px';
+                    btnContainer.style.width = '100%'; 
+                    btnContainer.style.margin = 'auto'; 
+
+                    console.log(`System: target is ${targetKey}`);
+
+                    keys.forEach(key => {
+                        const btn = document.createElement('button');
+                        btn.textContent = `Choose ${optionsMap[key]}`;
+
+                    btn.onclick = () => {
+                        if (key == targetKey){
+                            alert("Correct! You found the target: " + optionsMap[key]);
+                        } else{
+                            alert("Wrong choice!");
+                        }
+                    };
+
+                    btn.style.whiteSpace = 'normal';   // Allows text to wrap to multiple lines
+                    btn.style.wordBreak = 'break-word'; // Breaks long words so they don't overflow
+                    btn.style.padding = '15px';         // Gives text some room to breathe
+                    btn.style.minHeight = '60px';       // Optional: keeps buttons from being too flat
+                    btn.style.width = '100%';           
+
+                    btnContainer.appendChild(btn)
+
+                    })
+                    document.body.appendChild(targetDiv)
+                    document.body.appendChild(btnContainer)
+                }
+        } catch (error) {
+            console.error("Fetch failed", error);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded',loadData);
+    </script>
+</body>
+</html>

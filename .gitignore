@@ -1,0 +1,17 @@
+# environments
+.venv/
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store
+
+# weekend scratch files — kept locally, not part of the project
+comp_ast.py
+eml_compiler_v1.py
+eml_compiler_v2.py
+eml_compiler_v2 copy.py
+eml_compiler_v4.py
+kimi.py
+learning.txt
+project.txt
